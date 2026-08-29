@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "rs-autoback-gestao": {
+      "type": "http",
+      "url": "https://rab-kd.redesis.net/mcp-gestao",
+      "headers": {
+        "x-api-key": "${RAB_MCP_KEY}"
+      }
+    }
+  }
+}

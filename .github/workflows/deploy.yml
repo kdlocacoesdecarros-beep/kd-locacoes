@@ -1,0 +1,28 @@
+name: Deploy no RAB
+on:
+  push:
+    branches: [main, test, develop]   # main=prod · test=test · develop=dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+
+      - name: Ambiente e base path (por branch)
+        run: |
+          case "${{ github.ref_name }}" in
+            main)    echo "ENV=prod" >> $GITHUB_ENV; echo "BASE=/app/kd-locacoes/"      >> $GITHUB_ENV ;;
+            test)    echo "ENV=test" >> $GITHUB_ENV; echo "BASE=/app/kd-locacoes-test/" >> $GITHUB_ENV ;;
+            develop) echo "ENV=dev"  >> $GITHUB_ENV; echo "BASE=/app/kd-locacoes-dev/"  >> $GITHUB_ENV ;;
+          esac
+
+      - run: npm ci
+      - run: PUBLIC_PATH="$BASE" npm run build
+      - run: cd dist && zip -r ../bundle.zip .
+      - run: |
+          curl -fsS -X POST "https://rab-kd.redesis.net/api/frontend-apps/kd-locacoes/deploy?env=$ENV&activate=1" \
+            -H "x-api-key: ${{ secrets.RAB_DEPLOY_TOKEN }}" \
+            -F "file=@bundle.zip"
