@@ -9,7 +9,10 @@
     </div>
 
     <form v-if="mostrarForm" @submit.prevent="registrar" class="bg-white border border-slate-200 rounded-xl p-4 mb-4 space-y-3">
-      <input v-model="novo.placa" placeholder="Placa" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      <select v-model="novo.placa" required class="w-full border border-slate-300 rounded-lg px-3 py-2">
+        <option value="" disabled>Selecione a placa</option>
+        <option v-for="v in veiculos" :key="v.id" :value="v.placa">{{ v.placa }} — {{ v.modelo || 'sem modelo' }}</option>
+      </select>
       <select v-model="novo.tipo" class="w-full border border-slate-300 rounded-lg px-3 py-2">
         <option value="Óleo">Óleo</option>
         <option value="Pneu">Pneu</option>
@@ -51,6 +54,7 @@ import { ref, onMounted, reactive } from 'vue'
 import { api } from '@/api'
 
 const status = ref([])
+const veiculos = ref([])
 const carregando = ref(true)
 const mostrarForm = ref(false)
 const erro = ref('')
@@ -65,7 +69,12 @@ function corBadge(s) {
 async function carregar() {
   carregando.value = true
   try {
-    status.value = await api.get('manutencao/status')
+    const [resStatus, resVeic] = await Promise.all([
+      api.get('manutencao/status'),
+      api.get('veiculos/listar')
+    ])
+    status.value = resStatus
+    veiculos.value = (resVeic.rows || resVeic.veiculos || []).filter(v => v.ativo)
   } finally {
     carregando.value = false
   }

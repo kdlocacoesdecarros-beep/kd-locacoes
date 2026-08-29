@@ -9,7 +9,10 @@
     </div>
 
     <form v-if="mostrarForm" @submit.prevent="criar" class="bg-white border border-slate-200 rounded-xl p-4 mb-4 space-y-3">
-      <input v-model="novo.placa" placeholder="Placa" required class="w-full border border-slate-300 rounded-lg px-3 py-2" />
+      <select v-model="novo.placa" required class="w-full border border-slate-300 rounded-lg px-3 py-2">
+        <option value="" disabled>Selecione a placa</option>
+        <option v-for="v in veiculos" :key="v.id" :value="v.placa">{{ v.placa }} — {{ v.modelo || 'sem modelo' }}</option>
+      </select>
       <input v-model="novo.tipo" placeholder="Tipo de serviço" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
       <textarea v-model="novo.descricao" placeholder="Descrição" required class="w-full border border-slate-300 rounded-lg px-3 py-2"></textarea>
       <input v-model.number="novo.valorEstimado" type="number" placeholder="Valor estimado (R$)" class="w-full border border-slate-300 rounded-lg px-3 py-2" />
@@ -45,6 +48,7 @@ import { ref, onMounted, reactive } from 'vue'
 import { api } from '@/api'
 
 const requisicoes = ref([])
+const veiculos = ref([])
 const carregando = ref(true)
 const mostrarForm = ref(false)
 const fecharForm = ref(null)
@@ -55,8 +59,12 @@ const fecho = reactive({ km: null, valorFinal: null, oficina: '' })
 async function carregar() {
   carregando.value = true
   try {
-    const res = await api.get('requisicoes/abertas')
+    const [res, resVeic] = await Promise.all([
+      api.get('requisicoes/abertas'),
+      api.get('veiculos/listar')
+    ])
     requisicoes.value = res.rows || res.requisicoes || []
+    veiculos.value = (resVeic.rows || resVeic.veiculos || []).filter(v => v.ativo)
   } finally {
     carregando.value = false
   }
