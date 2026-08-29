@@ -23,14 +23,27 @@
 
     <p v-if="carregando" class="text-slate-500 text-sm">Carregando...</p>
     <div v-else class="space-y-2">
-      <div v-for="u in usuarios" :key="u.id" class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <p class="font-medium text-slate-900">{{ u.nome }}</p>
-          <p class="text-sm text-slate-500">{{ u.email }} · {{ u.perfil }}</p>
+      <div v-for="u in usuarios" :key="u.id" class="bg-white border border-slate-200 rounded-xl p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-slate-900">{{ u.nome }}</p>
+            <p class="text-sm text-slate-500">{{ u.email }} · {{ u.perfil }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span :class="u.ativo ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'" class="text-xs px-2 py-1 rounded-full">
+              {{ u.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+            <button @click="redefinirAberto = redefinirAberto === u.id ? null : u.id" class="text-xs text-indigo-600 underline">
+              Redefinir senha
+            </button>
+          </div>
         </div>
-        <span :class="u.ativo ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'" class="text-xs px-2 py-1 rounded-full">
-          {{ u.ativo ? 'Ativo' : 'Inativo' }}
-        </span>
+
+        <form v-if="redefinirAberto === u.id" @submit.prevent="redefinirSenha(u.id)" class="mt-3 border-t border-slate-100 pt-3 flex gap-2">
+          <input v-model="novaSenha" type="password" placeholder="Nova senha (mín. 4 caracteres)" required class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 text-sm">Salvar</button>
+        </form>
+        <p v-if="redefinirAberto === u.id && msgRedefinir" class="text-sm mt-2" :class="msgRedefinirErro ? 'text-red-600' : 'text-green-600'">{{ msgRedefinir }}</p>
       </div>
       <p v-if="!usuarios.length" class="text-slate-400 text-sm text-center py-8">Nenhum usuário cadastrado.</p>
     </div>
@@ -48,6 +61,11 @@ const mostrarForm = ref(false)
 const erro = ref('')
 const novo = reactive({ nome: '', email: '', senha: '', perfil: 'motorista' })
 const auth = useAuthStore()
+
+const redefinirAberto = ref(null)
+const novaSenha = ref('')
+const msgRedefinir = ref('')
+const msgRedefinirErro = ref(false)
 
 async function carregar() {
   carregando.value = true
@@ -68,6 +86,19 @@ async function cadastrar() {
     await carregar()
   } catch (e) {
     erro.value = e.message
+  }
+}
+
+async function redefinirSenha(id) {
+  msgRedefinir.value = ''
+  try {
+    await api.post('auth/usuarios-redefinir-senha', { id, novaSenha: novaSenha.value })
+    msgRedefinirErro.value = false
+    msgRedefinir.value = 'Senha redefinida com sucesso.'
+    novaSenha.value = ''
+  } catch (e) {
+    msgRedefinirErro.value = true
+    msgRedefinir.value = e.message
   }
 }
 
