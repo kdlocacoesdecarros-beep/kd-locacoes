@@ -9,7 +9,8 @@ const routes = [
   { path: '/requisicoes', name: 'requisicoes', component: () => import('@/views/RequisicoesView.vue'), meta: { auth: true } },
   { path: '/contas', name: 'contas', component: () => import('@/views/ContasView.vue'), meta: { auth: true } },
   { path: '/nfse', name: 'nfse', component: () => import('@/views/NfseView.vue'), meta: { auth: true } },
-  { path: '/vistoria', name: 'vistoria', component: () => import('@/views/VistoriaView.vue'), meta: { auth: true } }
+  { path: '/vistoria', name: 'vistoria', component: () => import('@/views/VistoriaView.vue'), meta: { auth: true } },
+  { path: '/usuarios', name: 'usuarios', component: () => import('@/views/UsuariosView.vue'), meta: { auth: true } }
 ]
 
 const router = createRouter({

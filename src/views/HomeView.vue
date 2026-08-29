@@ -18,6 +18,7 @@ const menu = [
   { to: '/requisicoes', icone: '📋', label: 'Requisições' },
   { to: '/contas', icone: '💰', label: 'Contas do mês' },
   { to: '/nfse', icone: '🧾', label: 'NFS-e' },
-  { to: '/vistoria', icone: '📝', label: 'Vistoria' }
+  { to: '/vistoria', icone: '📝', label: 'Vistoria' },
+  { to: '/usuarios', icone: '👥', label: 'Usuários' }
 ]
 </script>
