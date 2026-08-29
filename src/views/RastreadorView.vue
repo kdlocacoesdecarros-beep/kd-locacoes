@@ -38,19 +38,45 @@
       <p v-if="!carros.length" class="text-slate-400 text-sm text-center py-8">Nenhum veículo com posição disponível.</p>
     </div>
 
-    <h2 class="text-sm font-semibold text-slate-700 mb-2">KM rodado nas últimas semanas</h2>
-    <div class="space-y-2">
-      <div v-for="c in relatorioSemanal" :key="c.placa" class="bg-white border border-slate-200 rounded-xl p-3">
-        <div class="flex items-center justify-between mb-1">
-          <p class="font-medium text-slate-900">{{ c.placa }}</p>
-          <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">{{ c.totalKm }} km total</span>
-        </div>
-        <div class="flex gap-3 text-xs text-slate-500">
-          <span v-for="s in c.semanas" :key="s.label">{{ s.label }}: {{ s.km }}km</span>
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-sm font-semibold text-slate-700">Relatório de KM do mês</h2>
+      <div class="flex gap-2">
+        <select v-model.number="mesRelatorio" @change="carregarRelatorioMensal" class="border border-slate-300 rounded-lg px-2 py-1 text-sm">
+          <option v-for="(nome, i) in nomesMeses" :key="i" :value="i+1">{{ nome }}</option>
+        </select>
+        <select v-model.number="anoRelatorio" @change="carregarRelatorioMensal" class="border border-slate-300 rounded-lg px-2 py-1 text-sm">
+          <option v-for="a in anosDisponiveis" :key="a" :value="a">{{ a }}</option>
+        </select>
+      </div>
+    </div>
+
+    <p v-if="relatorioMensal" class="text-sm text-slate-500 mb-3">Total da frota no mês: <b class="text-slate-900">{{ relatorioMensal.totalMes }} km</b></p>
+
+    <h3 class="text-xs font-semibold text-slate-500 mb-2">Por motorista</h3>
+    <div class="space-y-1.5 mb-4">
+      <div v-for="m in relatorioMensal?.porMotorista" :key="m.motorista" class="bg-white border border-slate-200 rounded-lg px-3 py-2 flex items-center justify-between text-sm">
+        <span class="text-slate-700">{{ m.motorista }}</span>
+        <span class="font-medium text-slate-900">{{ m.km }} km</span>
+      </div>
+    </div>
+
+    <h3 class="text-xs font-semibold text-slate-500 mb-2">Por carro</h3>
+    <div class="space-y-1.5 mb-4">
+      <div v-for="c in relatorioMensal?.porCarro" :key="c.placa" class="bg-white border border-slate-200 rounded-lg px-3 py-2 flex items-center justify-between text-sm">
+        <span class="text-slate-700">{{ c.placa }} · {{ c.motorista }}</span>
+        <span class="font-medium text-slate-900">{{ c.km }} km</span>
+      </div>
+    </div>
+
+    <details class="mb-6">
+      <summary class="text-xs font-semibold text-slate-500 cursor-pointer">Por dia (clique pra expandir)</summary>
+      <div class="mt-2 grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+        <div v-for="d in relatorioMensal?.porDia" :key="d.dia" class="bg-white border border-slate-200 rounded-lg p-1.5 text-center">
+          <p class="text-[10px] text-slate-400">{{ d.dia.substring(8,10) }}</p>
+          <p class="text-xs font-medium" :class="d.km > 0 ? 'text-slate-900' : 'text-slate-300'">{{ d.km }}</p>
         </div>
       </div>
-      <p v-if="!relatorioSemanal.length" class="text-slate-400 text-sm text-center py-4">Sem dados de KM ainda.</p>
-    </div>
+    </details>
   </div>
 </template>
 
@@ -68,8 +94,13 @@ L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, 
 
 const carros = ref([])
 const veiculos = ref([])
-const relatorioSemanal = ref([])
+const relatorioMensal = ref(null)
 const carregando = ref(true)
+const hoje = new Date()
+const mesRelatorio = ref(hoje.getMonth() + 1)
+const anoRelatorio = ref(hoje.getFullYear())
+const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+const anosDisponiveis = [hoje.getFullYear() - 1, hoje.getFullYear()]
 const carregandoRota = ref(false)
 const placaSelecionada = ref('')
 const rotaAtiva = ref(false)
@@ -137,20 +168,24 @@ async function verRota() {
   }
 }
 
+async function carregarRelatorioMensal() {
+  try {
+    relatorioMensal.value = await api.get('rastreador/relatorio-mensal', { mes: mesRelatorio.value, ano: anoRelatorio.value })
+  } catch (e) {
+    relatorioMensal.value = null
+  }
+}
+
 async function carregar() {
   carregando.value = true
   try {
-    const hoje = new Date()
-    const inicioMes = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`
-    const fimHoje = hoje.toISOString().substring(0, 10)
-    const [posicoes, resVeic, semanal] = await Promise.all([
+    const [posicoes, resVeic] = await Promise.all([
       api.get('rastreador/posicoes'),
       api.get('veiculos/listar'),
-      api.get('rastreador/relatorio-semanal', { dataInicio: inicioMes, dataFim: fimHoje }).catch(() => ({ porCarro: [] }))
+      carregarRelatorioMensal()
     ])
     carros.value = posicoes
     veiculos.value = (resVeic.rows || resVeic.veiculos || []).filter(v => v.ativo)
-    relatorioSemanal.value = semanal.porCarro || []
     atualizarMarcadores()
   } finally {
     carregando.value = false
