@@ -11,7 +11,8 @@ const routes = [
   { path: '/nfse', name: 'nfse', component: () => import('@/views/NfseView.vue'), meta: { auth: true } },
   { path: '/vistoria', name: 'vistoria', component: () => import('@/views/VistoriaView.vue'), meta: { auth: true } },
   { path: '/usuarios', name: 'usuarios', component: () => import('@/views/UsuariosView.vue'), meta: { auth: true } },
-  { path: '/minha-conta', name: 'minha-conta', component: () => import('@/views/MinhaContaView.vue'), meta: { auth: true } }
+  { path: '/minha-conta', name: 'minha-conta', component: () => import('@/views/MinhaContaView.vue'), meta: { auth: true } },
+  { path: '/rastreador', name: 'rastreador', component: () => import('@/views/RastreadorView.vue'), meta: { auth: true } }
 ]
 
 const router = createRouter({
