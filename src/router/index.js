@@ -12,7 +12,8 @@ const routes = [
   { path: '/vistoria', name: 'vistoria', component: () => import('@/views/VistoriaView.vue'), meta: { auth: true } },
   { path: '/usuarios', name: 'usuarios', component: () => import('@/views/UsuariosView.vue'), meta: { auth: true } },
   { path: '/minha-conta', name: 'minha-conta', component: () => import('@/views/MinhaContaView.vue'), meta: { auth: true } },
-  { path: '/rastreador', name: 'rastreador', component: () => import('@/views/RastreadorView.vue'), meta: { auth: true } }
+  { path: '/rastreador', name: 'rastreador', component: () => import('@/views/RastreadorView.vue'), meta: { auth: true } },
+  { path: '/motoristas', name: 'motoristas', component: () => import('@/views/MotoristasView.vue'), meta: { auth: true } }
 ]
 
 const router = createRouter({

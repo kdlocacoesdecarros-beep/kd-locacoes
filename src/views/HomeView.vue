@@ -44,6 +44,7 @@ const resumo = ref(null)
 
 const menu = [
   { to: '/veiculos', icone: '🚗', label: 'Veículos' },
+  { to: '/motoristas', icone: '🧑‍✈️', label: 'Motoristas' },
   { to: '/manutencao', icone: '🔧', label: 'Manutenções' },
   { to: '/requisicoes', icone: '📋', label: 'Requisições' },
   { to: '/contas', icone: '💰', label: 'Contas do mês' },
