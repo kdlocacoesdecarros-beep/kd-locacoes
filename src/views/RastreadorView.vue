@@ -39,7 +39,7 @@
       <p v-if="!carros.length" class="text-slate-400 text-sm text-center py-8">Nenhum veículo com posição disponível.</p>
     </div>
 
-    <div class="flex items-center justify-between mb-2">
+    <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
       <h2 class="text-sm font-semibold text-slate-700">Relatório de KM do mês</h2>
       <div class="flex gap-2">
         <select v-model.number="mesRelatorio" @change="carregarRelatorioMensal" class="border border-slate-300 rounded-lg px-2 py-1 text-sm">
@@ -49,6 +49,13 @@
           <option v-for="a in anosDisponiveis" :key="a" :value="a">{{ a }}</option>
         </select>
       </div>
+    </div>
+
+    <div class="flex items-center gap-2 mb-3">
+      <select v-model="placaRelatorio" @change="carregarRelatorioMensal" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        <option value="">Ver "por dia" de: toda a frota</option>
+        <option v-for="v in veiculos" :key="v.id" :value="v.placa">Ver "por dia" de: {{ v.placa }} — {{ v.modelo || 'sem modelo' }}</option>
+      </select>
     </div>
 
     <p v-if="relatorioMensal" class="text-sm text-slate-500 mb-3">Total da frota no mês: <b class="text-slate-900">{{ relatorioMensal.totalMes }} km</b></p>
@@ -69,8 +76,10 @@
       </div>
     </div>
 
-    <details class="mb-6">
-      <summary class="text-xs font-semibold text-slate-500 cursor-pointer">Por dia (clique pra expandir)</summary>
+    <details class="mb-6" open>
+      <summary class="text-xs font-semibold text-slate-500 cursor-pointer">
+        Por dia{{ placaRelatorio ? ` — ${placaRelatorio}` : ' — toda a frota' }}
+      </summary>
       <div class="mt-2 grid grid-cols-4 sm:grid-cols-7 gap-1.5">
         <div v-for="d in relatorioMensal?.porDia" :key="d.dia" class="bg-white border border-slate-200 rounded-lg p-1.5 text-center">
           <p class="text-[10px] text-slate-400">{{ d.dia.substring(8,10) }}</p>
@@ -100,6 +109,7 @@ const carregando = ref(true)
 const hoje = new Date()
 const mesRelatorio = ref(hoje.getMonth() + 1)
 const anoRelatorio = ref(hoje.getFullYear())
+const placaRelatorio = ref('')
 const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const anosDisponiveis = [hoje.getFullYear() - 1, hoje.getFullYear()]
 const carregandoRota = ref(false)
@@ -174,7 +184,7 @@ async function verRota() {
 
 async function carregarRelatorioMensal() {
   try {
-    relatorioMensal.value = await api.get('rastreador/relatorio-mensal', { mes: mesRelatorio.value, ano: anoRelatorio.value })
+    relatorioMensal.value = await api.get('rastreador/relatorio-mensal', { mes: mesRelatorio.value, ano: anoRelatorio.value, placa: placaRelatorio.value })
   } catch (e) {
     relatorioMensal.value = null
   }
