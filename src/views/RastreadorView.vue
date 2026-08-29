@@ -6,11 +6,12 @@
       <button @click="carregar" class="text-sm bg-slate-100 px-3 py-1.5 rounded-lg">↻ Atualizar</button>
     </div>
 
-    <div class="bg-white border border-slate-200 rounded-xl p-3 mb-4 flex gap-2">
-      <select v-model="placaSelecionada" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
-        <option value="">Ver rota de hoje...</option>
+    <div class="bg-white border border-slate-200 rounded-xl p-3 mb-4 flex flex-wrap gap-2">
+      <select v-model="placaSelecionada" class="flex-1 min-w-[160px] border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        <option value="">Selecione a placa...</option>
         <option v-for="v in veiculos" :key="v.id" :value="v.placa">{{ v.placa }} — {{ v.modelo || 'sem modelo' }}</option>
       </select>
+      <input v-model="dataRota" type="date" :max="hojeStr" class="border border-slate-300 rounded-lg px-3 py-2 text-sm" />
       <button @click="verRota" :disabled="!placaSelecionada || carregandoRota" class="text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg">
         {{ carregandoRota ? 'Carregando...' : 'Ver rota' }}
       </button>
@@ -103,6 +104,8 @@ const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho
 const anosDisponiveis = [hoje.getFullYear() - 1, hoje.getFullYear()]
 const carregandoRota = ref(false)
 const placaSelecionada = ref('')
+const hojeStr = hoje.toISOString().substring(0, 10)
+const dataRota = ref(hojeStr)
 const rotaAtiva = ref(false)
 const msgRota = ref('')
 const mapEl = ref(null)
@@ -147,10 +150,11 @@ async function verRota() {
   limparRota()
   carregandoRota.value = true
   try {
-    const res = await api.get('rastreador/rota-hoje', { placa: placaSelecionada.value })
-    const pontos = (res.pontos || []).filter(p => p.lat && p.lng)
+    const res = await api.get('rastreador/rota-hoje', { placa: placaSelecionada.value, data: dataRota.value })
+    const lista = Array.isArray(res) ? res : (res.pontos || [])
+    const pontos = lista.filter(p => p.lat && p.lng)
     if (!pontos.length) {
-      msgRota.value = 'Sem pontos de rota registrados hoje pra essa placa.'
+      msgRota.value = 'Sem pontos de rota registrados nesse dia pra essa placa.'
       return
     }
     rotaAtiva.value = true
@@ -160,7 +164,7 @@ async function verRota() {
     const fim = L.marker(latlngs[latlngs.length - 1], { title: 'Última posição' }).addTo(map).bindPopup('Última posição — ' + (pontos[pontos.length - 1].hora || ''))
     rotaMarkers = [inicio, fim]
     map.fitBounds(latlngs, { padding: [30, 30] })
-    msgRota.value = `${pontos.length} pontos registrados hoje.`
+    msgRota.value = `${pontos.length} pontos registrados em ${dataRota.value.split('-').reverse().join('/')}.`
   } catch (e) {
     msgRota.value = e.message
   } finally {
